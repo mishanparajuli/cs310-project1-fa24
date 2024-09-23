@@ -4,166 +4,112 @@ import com.github.cliftonlabs.json_simple.*;
 import java.util.List;
 import java.util.Set;
 import org.junit.*;
+import java.util.Iterator;
 import static org.junit.Assert.*;
 
 public class JsonCsvConversionTest {
+   private String csvOriginalString;
+   private List<String[]> csvOriginal;
+   private JsonObject jsonOriginal;
+   private ClassSchedule schedule;
 
-    private String csvOriginalString;
-    private List<String[]> csvOriginal;
-    private JsonObject jsonOriginal;
-    private ClassSchedule schedule;
-    
-    @Before
-    public void setUp() {
+   @Before
+   public void setUp() {
+      this.schedule = new ClassSchedule();
+      this.csvOriginal = this.schedule.getCsv();
+      this.csvOriginalString = this.schedule.getCsvString(this.csvOriginal);
+      this.jsonOriginal = this.schedule.getJson();
+   }
 
-        schedule = new ClassSchedule();
-        
-        csvOriginal = schedule.getCsv();
-        csvOriginalString = schedule.getCsvString(csvOriginal);
-        
-        jsonOriginal = schedule.getJson();
-        
-    }
-        
-    @Test
-    public void testCsvToJson() {
-        
-        // Convert CSV to JSON, then compare output to original JSON object
-        
-        try {
-            
-            // get JSON output for testing
-            
-            String testJsonString = schedule.convertCsvToJsonString(csvOriginal);
-            JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
-            
-            // copy original JSON object and remove "section" element (so it can be tested separately)
+   @Test
+   public void testCsvToJson() {
+      try {
+         String testJsonString = this.schedule.convertCsvToJsonString(this.csvOriginal);
+         JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
+         JsonObject testJsonObjectOriginal = Jsoner.deserialize(Jsoner.serialize(this.jsonOriginal), new JsonObject());
+         Set<String> keys = testJsonObjectOriginal.keySet();
+         keys.remove("section");
+         Iterator var5 = keys.iterator();
 
-            JsonObject testJsonObjectOriginal = Jsoner.deserialize(Jsoner.serialize(jsonOriginal), new JsonObject());
-            Set<String> keys = testJsonObjectOriginal.keySet();
-            keys.remove("section");
-            
-            // test elements other than "section"
-            
-            for (String key : keys) {
-                
-                Object testValue = testJsonObject.get(key);
-                Object originalValue = testJsonObjectOriginal.get(key);
-                assertNotNull(testValue);
-                assertEquals(originalValue, testValue);
+         while(var5.hasNext()) {
+            String key = (String)var5.next();
+            Object testValue = testJsonObject.get(key);
+            Object originalValue = testJsonObjectOriginal.get(key);
+            Assert.assertNotNull(testValue);
+            Assert.assertEquals(originalValue, testValue);
+         }
 
-            }
-            
-            // get "section" elements from original and test JSON
-            
-            JsonArray sectionTest = (JsonArray)testJsonObject.get("section");
-            JsonArray sectionOriginal = (JsonArray)jsonOriginal.get("section");
-            assertNotNull(sectionTest);
-            
-            // test "section" elements individually
-            
-            for (int i = 0; i < sectionOriginal.size(); ++i) {
-                assertEquals(sectionOriginal.get(i), sectionTest.get(i));
-            }
-            
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-        
-    }
-    
-    @Test
-    public void testJsonToCsv() {
-        
-        // Convert JSON to CSV, then compare output to original CSV string
-        
-        try {
-            
-            String testCsvString = schedule.convertJsonToCsvString(jsonOriginal);
-            
-            assertEquals(csvOriginalString, testCsvString);
-            
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-        
-    }
-    
-    @Test
-    public void testCsvToJsonToCsv() {
-        
-        // Convert CSV to JSON and back again, then compare output to original CSV string
-        
-        try {
-            
-            String testJsonString = schedule.convertCsvToJsonString(csvOriginal);
-            JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
-            String testCsvString = schedule.convertJsonToCsvString(testJsonObject);
-            
-            assertEquals(csvOriginalString, testCsvString);
-            
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-        
-    }
-    
-    @Test
-    public void testJsonToCsvToJson() {
-        
-        // Convert JSON to CSV and back again, then compare output to original JSON object
-        
-        try {
-            
-            // get JSON output for testing
-            
-            String testCsvString = schedule.convertJsonToCsvString(jsonOriginal);
-            List<String[]> testCsv = schedule.getCsv(testCsvString);
-            String testJsonString = schedule.convertCsvToJsonString(testCsv);
-            
-            JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
-            
-            // copy original JSON object and remove "section" element (so it can be tested separately)
+         JsonArray sectionTest = (JsonArray)testJsonObject.get("section");
+         JsonArray sectionOriginal = (JsonArray)this.jsonOriginal.get("section");
+         Assert.assertNotNull(sectionTest);
 
-            JsonObject testJsonObjectOriginal = Jsoner.deserialize(Jsoner.serialize(jsonOriginal), new JsonObject());
-            Set<String> keys = testJsonObjectOriginal.keySet();
-            keys.remove("section");
-            
-            // test elements other than "section"
-            
-            for (String key : keys) {
-                
-                Object testValue = testJsonObject.get(key);
-                Object originalValue = testJsonObjectOriginal.get(key);
-                assertNotNull(testValue);
-                assertEquals(originalValue, testValue);
+         for(int i = 0; i < sectionOriginal.size(); ++i) {
+            Assert.assertEquals(sectionOriginal.get(i), sectionTest.get(i));
+         }
+      } catch (Exception var9) {
+         var9.printStackTrace();
+         Assert.fail();
+      }
 
-            }
-            
-            // get "section" elements from original and test JSON
-            
-            JsonArray sectionTest = (JsonArray)testJsonObject.get("section");
-            JsonArray sectionOriginal = (JsonArray)jsonOriginal.get("section");
-            assertNotNull(sectionTest);
-            
-            // test "section" elements individually
-            
-            for (int i = 0; i < sectionOriginal.size(); ++i) {
-                assertEquals(sectionOriginal.get(i), sectionTest.get(i));
-            }
-            
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Assert.fail();
-        }
-        
-    }
-    
+   }
+
+   @Test
+   public void testJsonToCsv() {
+      try {
+         String testCsvString = this.schedule.convertJsonToCsvString(this.jsonOriginal);
+         Assert.assertEquals(this.csvOriginalString, testCsvString);
+      } catch (Exception var2) {
+         var2.printStackTrace();
+         Assert.fail();
+      }
+
+   }
+
+   @Test
+   public void testCsvToJsonToCsv() {
+      try {
+         String testJsonString = this.schedule.convertCsvToJsonString(this.csvOriginal);
+         JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
+         String testCsvString = this.schedule.convertJsonToCsvString(testJsonObject);
+         Assert.assertEquals(this.csvOriginalString, testCsvString);
+      } catch (Exception var4) {
+         var4.printStackTrace();
+         Assert.fail();
+      }
+
+   }
+
+   @Test
+   public void testJsonToCsvToJson() {
+      try {
+         String testCsvString = this.schedule.convertJsonToCsvString(this.jsonOriginal);
+         List<String[]> testCsv = this.schedule.getCsv(testCsvString);
+         String testJsonString = this.schedule.convertCsvToJsonString(testCsv);
+         JsonObject testJsonObject = Jsoner.deserialize(testJsonString, new JsonObject());
+         JsonObject testJsonObjectOriginal = Jsoner.deserialize(Jsoner.serialize(this.jsonOriginal), new JsonObject());
+         Set<String> keys = testJsonObjectOriginal.keySet();
+         keys.remove("section");
+         Iterator var7 = keys.iterator();
+
+         while(var7.hasNext()) {
+            String key = (String)var7.next();
+            Object testValue = testJsonObject.get(key);
+            Object originalValue = testJsonObjectOriginal.get(key);
+            Assert.assertNotNull(testValue);
+            Assert.assertEquals(originalValue, testValue);
+         }
+
+         JsonArray sectionTest = (JsonArray)testJsonObject.get("section");
+         JsonArray sectionOriginal = (JsonArray)this.jsonOriginal.get("section");
+         Assert.assertNotNull(sectionTest);
+
+         for(int i = 0; i < sectionOriginal.size(); ++i) {
+            Assert.assertEquals(sectionOriginal.get(i), sectionTest.get(i));
+         }
+      } catch (Exception var11) {
+         var11.printStackTrace();
+         Assert.fail();
+      }
+
+   }
 }
